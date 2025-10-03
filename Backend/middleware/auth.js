@@ -11,7 +11,18 @@ async function authMiddleware(req, res, next) {
     return res.status(401).json({ error: 'Invalid or expired token' })
   }
 
-  req.user = data.user
+  // Fetch user profile from user_profiles table
+  const { data: profileData, error: profileError } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('id', data.user.id)
+    .single()
+
+  if (profileError) {
+    return res.status(401).json({ error: 'User profile not found' })
+  }
+
+  req.user = profileData
   next()
 }
 

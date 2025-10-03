@@ -3,7 +3,7 @@ const supabase = require('../config/supabase')
 // Get all tasks for logged-in user
 exports.getTasks = async (req, res) => {
   const { data, error } = await supabase
-    .from('tasks')
+    .from('todos')
     .select('*')
     .eq('user_id', req.user.id)
     .order('created_at', { ascending: false })
@@ -18,7 +18,7 @@ exports.createTask = async (req, res) => {
   const newTask = { user_id: req.user.id, title, notes }
 
   const { data, error } = await supabase
-    .from('tasks')
+    .from('todos')
     .insert(newTask)
     .select()
     .single()
@@ -33,7 +33,7 @@ exports.updateTask = async (req, res) => {
   const changes = req.body
 
   const { data, error } = await supabase
-    .from('tasks')
+    .from('todos')
     .update(changes)
     .eq('id', id)
     .select()
@@ -48,7 +48,7 @@ exports.deleteTask = async (req, res) => {
   const { id } = req.params
 
   const { error } = await supabase
-    .from('tasks')
+    .from('todos')
     .delete()
     .eq('id', id)
 

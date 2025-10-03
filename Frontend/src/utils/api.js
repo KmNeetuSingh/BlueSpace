@@ -1,0 +1,31 @@
+import axios from 'axios'
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE || 'http://localhost:3000',
+})
+// attach current UI language on each request
+api.interceptors.request.use(config => {
+  try {
+    const lang = localStorage.getItem('lang') || 'en'
+    config.headers['X-Lang'] = lang
+  } catch {}
+  return config
+})
+
+api.setToken = token => {
+  if (token) {
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+  } else {
+    delete api.defaults.headers.common['Authorization']
+  }
+}
+
+// initialize from localStorage
+try {
+  const stored = JSON.parse(localStorage.getItem('auth') || 'null')
+  if (stored?.access_token) api.setToken(stored.access_token)
+} catch {}
+
+export default api
+
+

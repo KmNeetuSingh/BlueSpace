@@ -3,7 +3,6 @@ import axios from 'axios'
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE || 'http://localhost:3000',
 })
-// attach current UI language on each request
 api.interceptors.request.use(config => {
   try {
     const lang = localStorage.getItem('lang') || 'en'

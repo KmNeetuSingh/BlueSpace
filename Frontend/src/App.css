@@ -146,18 +146,95 @@ body {
 .subtitle { font-size: 14px; color: var(--muted); }
 
 /* Landing hero */
-.hero { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 28px; padding: 36px; min-height: 380px; }
-.hero-content { display: grid; gap: 18px; align-content: center; }
-.hero-title { font-size: 38px; line-height: 1.2; margin: 0; }
-.hero-subtitle { font-size: 16px; color: var(--muted); margin: 0; }
-.badge { display: inline-block; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--border); color: var(--text); font-weight: 600; font-size: 12px; width: fit-content; }
-.cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
-.hero-art { position: relative; display: flex; align-items: center; justify-content: center; padding: 20px; background:
-  radial-gradient(900px 500px at 20% 20%, rgba(124,92,255,0.20), transparent 60%),
-  radial-gradient(700px 360px at 80% 60%, rgba(34,197,94,0.14), transparent 70%);
-  border-left: 1px solid var(--border);
+.hero {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 40px;
+  padding: 48px;
+  min-height: 420px;
+  transition: all 0.3s ease;
 }
-.hero-video { width: 100%; max-width: 520px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
+.hero-content {
+  display: grid;
+  gap: 24px;
+  align-content: center;
+  animation: fadeInUp 0.8s ease-out;
+}
+.hero-title {
+  font-size: 42px;
+  line-height: 1.1;
+  margin: 0;
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+.hero-subtitle {
+  font-size: 18px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.4;
+}
+.badge {
+  display: inline-block;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 12px;
+  width: fit-content;
+  background: var(--brand);
+  color: white;
+  transition: all 0.2s ease;
+}
+.badge:hover {
+  transform: scale(1.05);
+}
+.cta-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  align-items: center;
+}
+.hero-art {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(900px 500px at 20% 20%, rgba(124,92,255,0.20), transparent 60%),
+    radial-gradient(700px 360px at 80% 60%, rgba(34,197,94,0.14), transparent 70%);
+  border-left: 1px solid var(--border);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+.hero-video {
+  width: 100%;
+  max-width: 520px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+}
+.hero-video:hover {
+  transform: scale(1.02);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+/* Animation keyframes */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 /* Task Management Styles */
 .task-sidebar {
@@ -326,12 +403,100 @@ html[data-theme="dark"] .task-sidebar {
   }
 }
 
+/* Responsive Design for Landing Page */
+@media (max-width: 1024px) {
+  .hero {
+    grid-template-columns: 1fr 0.8fr;
+    gap: 32px;
+    padding: 40px;
+    min-height: 400px;
+  }
+  .hero-title { font-size: 38px; }
+  .hero-subtitle { font-size: 17px; }
+}
+
+.landing-features {
+  margin-top: 24px;
+  display: flex;
+  gap: 16px;
+}
+
+.feature-box {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+}
+
+.feature-box h3 {
+  margin: 0 0 8px 0;
+}
+
+.feature-box p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+@media (max-width: 860px) {
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 32px 24px;
+    gap: 24px;
+    min-height: auto;
+  }
+  .hero-content { gap: 20px; }
+  .hero-art {
+    min-height: 200px;
+    border-left: 0;
+    border-top: 1px solid var(--border);
+    padding: 20px;
+  }
+  .hero-title { font-size: 32px; }
+  .hero-subtitle { font-size: 16px; }
+  .hero-video { max-width: 100%; }
+  .cta-row { gap: 12px; }
+}
+
+@media (max-width: 640px) {
+  .hero { padding: 24px 16px; }
+  .hero-title { font-size: 28px; }
+  .hero-subtitle { font-size: 15px; }
+  .badge { font-size: 11px; padding: 6px 10px; }
+  .cta-row { flex-direction: column; gap: 8px; align-items: stretch; }
+  .btn { font-size: 14px; padding: 10px 16px; }
+  .hero-art { min-height: 160px; padding: 16px; }
+  .hero-video { max-width: 100%; aspect-ratio: 16 / 9; }
+
+  /* Make landing features stack vertically on small screens */
+  .landing-features {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+/* Add horizontal padding and margin on fullscreen (large screens) for better spacing */
+@media (min-width: 1280px) {
+  .hero {
+    padding-left: 80px;
+    padding-right: 80px;
+    margin-left: 40px;
+    margin-right: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero { padding: 20px 12px; }
+  .hero-title { font-size: 24px; }
+  .hero-subtitle { font-size: 14px; }
+  .badge { font-size: 10px; padding: 4px 8px; }
+  .btn { font-size: 13px; padding: 8px 12px; }
+  .hero-art { min-height: 140px; }
+}
+
 /* ✅ Responsive Fix for Theme on Small Screens */
 @media (max-width: 860px) {
-  .hero { grid-template-columns: 1fr; padding: 24px; }
-  .hero-art { min-height: 180px; border-left: 0; border-top: 1px solid var(--border); }
-  .hero-title { font-size: 30px; }
-
   .task-sidebar {
     width: 100%;
     min-height: 100vh;

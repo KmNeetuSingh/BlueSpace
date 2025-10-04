@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchAISuggestions, createAISuggestion, deleteAISuggestion, toggleCheckbox, clearErrors } from '../store/aiSlice'
-import { addTask } from '../store/tasksSlice'
+import { addTask, fetchTasks } from '../store/tasksSlice'
 import { useTranslation } from 'react-i18next'
 import '../i18n'
 
@@ -56,20 +56,30 @@ export default function AIFloatingWidget() {
   const parseItems = text => text.split('\n').filter(l => l.trim()).map(line => ({ text: line.replace(/^[-*0-9.\[\]]+\s*/, ''), original: line }))
 
   const addAsTask = async (suggestion) => {
-    const items = parseItems(suggestion.suggestion)
-    const selected = items.filter((_, i) => isChecked(suggestion.id, i)).map(i => i.text).join('\n')
-    const allChecked = items.length > 0 && items.every((_, i) => isChecked(suggestion.id, i))
-    const taskData = { title: suggestion.title || 'AI Task', notes: selected || suggestion.suggestion, completed: allChecked, reason: 'AI Generated' }
-    const result = await dispatch(addTask(taskData))
-    if (addTask.fulfilled.match(result)) {
-      alert('AI suggestion added as task!')
-      setOpen(false)
-      // Refresh tasks to update completed category
-      dispatch(fetchTasks())
+    try {
+      const items = parseItems(suggestion.suggestion)
+      const selected = items.filter((_, i) => isChecked(suggestion.id, i)).map(i => i.text).join('\n')
+      const allChecked = items.length > 0 && items.every((_, i) => isChecked(suggestion.id, i))
+      const taskData = { title: suggestion.title || 'AI Task', notes: selected || suggestion.suggestion, completed: allChecked, reason: 'AI Generated' }
+      console.log('Dispatching addTask with:', taskData)
+      const result = await dispatch(addTask(taskData))
+      console.log('addTask result:', result)
+      if (addTask.fulfilled.match(result)) {
+        alert('AI suggestion added as task!')
+        setOpen(false)
+        console.log('Dispatching fetchTasks to refresh tasks')
+        dispatch(fetchTasks())
+      } else {
+        console.error('addTask was not fulfilled:', result)
+        alert('Failed to add task. Check console for details.')
+      }
+    } catch (error) {
+      console.error('Error in addAsTask:', error)
+      alert('Error adding task: ' + error.message)
     }
   }
 
-  // New function to check if all checkboxes are checked for a suggestion
+  // Check if all checkboxes are checked for a suggestion
   const areAllChecked = (suggestion) => {
     const items = parseItems(suggestion.suggestion)
     return items.length > 0 && items.every((_, i) => isChecked(suggestion.id, i))
@@ -140,7 +150,6 @@ export default function AIFloatingWidget() {
                   onClick={() => addAsTask(s)} 
                   className="btn primary" 
                   style={{ width: '100%', marginTop: 8 }}
-                  disabled={!areAllChecked(s)}
                 >
                   {t('add_as_task')}
                 </button>

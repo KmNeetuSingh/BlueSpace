@@ -17,8 +17,23 @@ app.use('/ai', aiRoutes);
 app.use('/auth', authRoutes);
 
 app.get("/health", (req, res) => {
-  res.send(" Server Health is good.");
+  res.send("Server Health is good.");
 });
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Global error handler:', err);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
 app.listen(PORT, () => {
-  console.log("Server is Running");
+  console.log("Server is Running on port", PORT);
 });

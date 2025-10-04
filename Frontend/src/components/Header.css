@@ -1,0 +1,107 @@
+/* Header.css */
+
+header.space-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding: 0 16px;
+  flex-wrap: nowrap;
+  color: var(--text);
+}
+
+header.space-between > .row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.title {
+  color: var(--text);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.title:hover,
+.title:focus {
+  color: var(--hover);
+  outline: none;
+}
+
+.subtitle {
+  color: var(--muted);
+}
+
+.btn {
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+
+.btn:hover,
+.btn:focus {
+  background: var(--hover);
+  border-color: var(--hover);
+  color: var(--active-text);
+  outline: none;
+}
+
+.btn.primary {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: white;
+}
+
+.btn.primary:hover,
+.btn.primary:focus {
+  background: var(--hover);
+  border-color: var(--hover);
+  color: var(--active-text);
+}
+
+.btn.ghost {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+.btn.ghost:hover,
+.btn.ghost:focus {
+  background: var(--border);
+  color: var(--text);
+  outline: none;
+}
+
+@media (max-width: 860px) {
+  header.space-between {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 0 12px;
+  }
+
+  header.space-between > .row {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  header.space-between > .row:first-child {
+    flex-wrap: wrap;
+  }
+
+  header.space-between > .row:first-child > * {
+    margin-bottom: 8px;
+  }
+
+  .btn {
+    font-size: 14px;
+    padding: 6px 12px;
+  }
+
+  .title {
+    font-size: 18px;
+  }
+}

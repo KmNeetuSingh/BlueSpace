@@ -2,10 +2,24 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import api from '../utils/api'
 
 export const fetchTasks = createAsyncThunk('tasks/fetch', async (_, { rejectWithValue }) => {
-  try { const res = await api.get('/tasks'); return res.data } catch (e) { return rejectWithValue(e.response?.data?.error || 'Fetch failed') }
+  try { 
+    const res = await api.get('/tasks'); 
+    console.log('Tasks fetched:', res.data)
+    return res.data 
+  } catch (e) { 
+    console.error('Fetch tasks error:', e.response?.data || e.message)
+    return rejectWithValue(e.response?.data?.error || e.message || 'Fetch failed') 
+  }
 })
 export const addTask = createAsyncThunk('tasks/add', async (payload, { rejectWithValue }) => {
-  try { const res = await api.post('/tasks', payload); return res.data } catch (e) { return rejectWithValue(e.response?.data?.error || 'Create failed') }
+  try { 
+    const res = await api.post('/tasks', payload); 
+    console.log('Task created:', res.data)
+    return res.data 
+  } catch (e) { 
+    console.error('Task creation error:', e.response?.data || e.message)
+    return rejectWithValue(e.response?.data?.error || e.message || 'Create failed') 
+  }
 })
 export const updateTask = createAsyncThunk('tasks/update', async ({ id, changes }, { rejectWithValue }) => {
   try { const res = await api.put(`/tasks/${id}`, changes); return res.data } catch (e) { return rejectWithValue(e.response?.data?.error || 'Update failed') }

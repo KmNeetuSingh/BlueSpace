@@ -26,6 +26,18 @@ try {
   if (stored?.access_token) api.setToken(stored.access_token)
 } catch {}
 
+// AI Suggestions API
+export const aiSuggestionsAPI = {
+  // Get all AI suggestions for current user
+  getSuggestions: () => api.get('/ai'),
+  
+  // Create new AI suggestion
+  createSuggestion: (data) => api.post('/ai', data),
+  
+  // Delete AI suggestion
+  deleteSuggestion: (id) => api.delete(`/ai/${id}`)
+}
+
 export default api
 
 

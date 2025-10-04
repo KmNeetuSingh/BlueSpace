@@ -34,7 +34,7 @@ export default function LoginPage() {
         </div>
         {error && <div className="subtitle" style={{ color: '#f87171' }}>{error}</div>}
         <div className="row" style={{ justifyContent: 'space-between', marginTop: 8 }}>
-          <Link className="btn ghost" to="/register">{t('register')}</Link>
+          {/* <Link className="btn ghost" to="/register">{t('register')}</Link> */}
           <button className="btn primary" disabled={status==='loading'}>{status==='loading' ? '...' : t('login')}</button>
         </div>
       </form>

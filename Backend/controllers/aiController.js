@@ -38,7 +38,9 @@ exports.getAISuggestions = async (req, res) => {
 exports.createAISuggestion = async (req, res) => {
   try {
     const { prompt, title } = req.body;
+    const userLanguage = req.headers['x-lang'] || 'en'; // Get language from header
 
+    // Validate input
     if (!prompt?.trim()) {
       return res.status(400).json({
         success: false,
@@ -46,10 +48,25 @@ exports.createAISuggestion = async (req, res) => {
       });
     }
 
+    // Check if GROQ API key is available
+    if (!process.env.GROQ_API_KEY) {
+      return res.status(500).json({
+        success: false,
+        error: "AI service is not configured. Please contact administrator.",
+      });
+    }
+
+    // Add language instruction to the prompt
+    let enhancedPrompt = prompt.trim();
+    
+    if (userLanguage === 'hi') {
+      enhancedPrompt += "\n\nअपना जवाब हिंदी में दें। हिंदी भाषा का उपयोग करते हुए सुझाव प्रदान करें।";
+    }
+
     // ✅ Call Groq API
     const chatCompletion = await groq.chat.completions.create({
       model: "llama-3.1-8b-instant", // fast + free
-      messages: [{ role: "user", content: prompt }],
+      messages: [{ role: "user", content: enhancedPrompt }],
       temperature: 0.7,
       max_tokens: 512,
     });

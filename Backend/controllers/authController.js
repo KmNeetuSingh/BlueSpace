@@ -1,49 +1,69 @@
-  const supabase = require("../config/supabase");
-  exports.register = async (req, res) => {
-    const { email, password, options } = req.body;
+const supabase = require("../config/supabase");
 
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required" });
-    }
+exports.register = async (req, res) => {
+    try {
+      const { email, password, options } = req.body;
 
-    const newEmail = email.trim();
-    const full_name = options?.data?.full_name || '';
-    const preferred_language = options?.data?.preferred_language || 'en';
+      // Validate input
+      if (!email || !password) {
+        return res.status(400).json({ error: "Email and password are required" });
+      }
 
-    const { data, error } = await supabase.auth.signUp({
-      email: newEmail,
-      password,
-      options: {
-        data: {
-          full_name,
-          preferred_language,
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: "Invalid email format" });
+      }
+
+      // Password strength validation
+      if (password.length < 6) {
+        return res.status(400).json({ error: "Password must be at least 6 characters long" });
+      }
+
+      const newEmail = email.trim();
+      const full_name = options?.data?.full_name || '';
+      const preferred_language = options?.data?.preferred_language || 'en';
+
+      const { data, error } = await supabase.auth.signUp({
+        email: newEmail,
+        password,
+        options: {
+          data: {
+            full_name,
+            preferred_language,
+          },
         },
-      },
-    });
+      });
 
-    if (error) {
-      console.error("Supabase signUp error:", error);
-      return res.status(400).json({ error: error.message });
+      if (error) {
+        console.error("Supabase signUp error:", error);
+        return res.status(400).json({ error: error.message });
+      }
+
+      res.status(201).json({
+        message: "User registered successfully",
+        user: data.user,
+        session: data.session,
+      });
+    } catch (err) {
+      console.error('Registration error:', err);
+      res.status(500).json({ error: 'Server error during registration' });
     }
+};
 
-    res.status(201).json({
-      message: "User registered successfully",
-      user: data.user,
-      session: data.session,
-    });
-  };
-
-
-  // Login user
-  // const supabase = require('../config/supabase');
-
-  exports.login = async (req, res) => {
+exports.login = async (req, res) => {
     try {
       const { email, password } = req.body;
 
-      // 1️⃣ Validate input
+      // Validate input
       if (!email || !password) {
         return res.status(400).json({ error: 'Email and password are required' });
+      }
+
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ error: 'Invalid email format' });
       }
 
       // 2️⃣ Login via Supabase Auth
@@ -87,4 +107,4 @@
       console.error('Login error:', err);
       return res.status(500).json({ error: 'Server error' });
     }
-  };
+};

@@ -1,19 +1,47 @@
-# AI-Powered Todo App
+# AI-Powered Todo App - Complete Documentation
 
-AI-Powered Todo App is a full-stack productivity application that leverages AI to help users manage their tasks efficiently with intelligent suggestions, multilingual support, and seamless task management.
+A full-stack productivity application that leverages AI to help users manage their tasks efficiently with intelligent suggestions, multilingual support, secure email verification, and seamless task management.
 
 ---
 
-## Technology Stack Overview
+## Table of Contents
 
-**Core Technologies:**
-* **Frontend:** React 18 with Vite
-* **Backend:** Node.js with Express.js
-* **Database:** Supabase (PostgreSQL)
-* **AI Engine:** Groq API (LLaMA models)
-* **Authentication:** Supabase Auth with JWT
-* **State Management:** Redux Toolkit
-* **Internationalization:** i18next
+1. [Technology Stack](#technology-stack)
+2. [System Architecture](#system-architecture)
+3. [Security Architecture](#security-architecture)
+4. [User Flows](#user-flows)
+5. [Database Schema](#database-schema)
+6. [API Reference](#api-reference)
+7. [State Management](#state-management)
+8. [Key Features](#key-features)
+9. [Performance Optimizations](#performance-optimizations)
+10. [Deployment](#deployment)
+
+---
+
+## Technology Stack
+
+### Frontend
+- **Framework:** React 18 with Vite
+- **Styling:** Tailwind CSS
+- **State Management:** Redux Toolkit
+- **Routing:** React Router v6
+- **Internationalization:** i18next (English/Hindi)
+- **HTTP Client:** Axios with interceptors
+
+### Backend
+- **Runtime:** Node.js
+- **Framework:** Express.js
+- **Database:** Supabase (PostgreSQL)
+- **AI Engine:** Groq API (LLaMA 3.1 models)
+- **Authentication:** Supabase Auth with JWT
+- **Email Service:** Supabase SMTP
+
+### Infrastructure
+- **Frontend Hosting:** Vercel
+- **Backend Hosting:** Render
+- **Database:** Supabase Cloud
+- **CI/CD:** GitHub Actions
 
 ---
 
@@ -38,6 +66,7 @@ AI-Powered Todo App is a full-stack productivity application that leverages AI t
         |  - Redux Slices (auth, tasks, ai, ui)          |
         |  - Multi-language support (EN/HI)              |
         |  - Theme switching (Light/Dark)                |
+        |  - Email confirmation handling                 |
         +------------------------+-----------------------+
                                  |
                                  | HTTP/HTTPS + JWT Token
@@ -50,11 +79,13 @@ AI-Powered Todo App is a full-stack productivity application that leverages AI t
         |  Middleware Stack:                             |
         |  - CORS Handler                                |
         |  - JWT Verification (Supabase)                 |
+        |  - Email Verification Check                    |
         |  - Request Logger                              |
+        |  - Rate Limiter                                |
         |  - Error Handler                               |
         |                                                |
         |  API Routes:                                   |
-        |  - /api/auth (Registration & Login)            |
+        |  - /api/auth (Registration, Login, Confirm)    |
         |  - /api/tasks (CRUD operations)                |
         |  - /api/ai (AI Suggestions)                    |
         +------------+-------------------+---------------+
@@ -66,812 +97,1582 @@ AI-Powered Todo App is a full-stack productivity application that leverages AI t
         |   (PostgreSQL)        |  |   (LLaMA Models)     |
         |                       |  |                      |
         |  Tables:              |  |  Functions:          |
-        |  - Users              |  |  - Task Suggestions  |
+        |  - Users (Auth)       |  |  - Task Suggestions  |
         |  - Tasks              |  |  - Smart Planning    |
         |  - Profiles           |  |  - Multilingual      |
         |                       |  |                      |
         |  Features:            |  |  Languages:          |
         |  - Real-time updates  |  |  - English           |
         |  - Row Level Security |  |  - Hindi             |
+        |  - Email verification |  |                      |
         |  - Auto-scaling       |  |                      |
-        +-----------------------+  +----------------------+
+        +-----------+-----------+  +----------------------+
+                    |
+                    v
+        +-----------------------+
+        |   EMAIL SERVICE       |
+        |   Supabase SMTP       |
+        |                       |
+        |  Functions:           |
+        |  - Confirmation emails|
+        |  - Password reset     |
+        |  - Notifications      |
+        +-----------------------+
 ```
 
 ---
 
 ## Security Architecture
 
-### User Registration Flow
+### Complete User Registration Flow with Email Verification
 
 ```
-User enters credentials
-        |
-        v
-POST /api/auth/register
-        |
-        v
-Supabase Auth creates user
-        - Email validation
-        - Password hashing (bcrypt by Supabase)
-        - User ID generation
-        |
-        v
-Create user profile in Supabase DB
-        |
-        v
-Return JWT token
-        - Payload: userId, email
-        - Expiration: Based on Supabase config
-        |
-        v
-Send token to frontend
-        |
-        v
-Store in Redux state + localStorage
+Step 1: User Registration
+        ↓
+Step 2: Frontend Validation
+        - Email format check
+        - Password strength validation (min 8 chars)
+        - Terms acceptance
+        ↓
+Step 3: POST /api/auth/register
+        ↓
+Step 4: Backend Validation
+        - Email uniqueness check
+        - Input sanitization
+        ↓
+Step 5: Supabase Auth Creates User
+        - Generate UUID
+        - Hash password (bcrypt, 10 rounds)
+        - User status: "UNCONFIRMED"
+        - Generate confirmation token (24h expiry)
+        ↓
+Step 6: Send Confirmation Email
+        Subject: "Confirm your email - AI Todo App"
+        Link: https://app.domain.com/auth/confirm?token=abc123xyz
+        ↓
+Step 7: Create User Profile
+        - Store user metadata
+        - Set email_confirmed_at: null
+        ↓
+Step 8: Return Registration Response (201)
+        - requiresEmailConfirmation: true
+        ↓
+Step 9: Redirect to Email Confirmation Pending Page
+        ↓
+Step 10: User Clicks Email Link
+        ↓
+Step 11: Email Confirmation Process
+        - Validate token
+        - Check expiration
+        - Update user record
+        - Generate session tokens (JWT)
+        ↓
+Step 12: Redirect to Email Confirmed Page
+        ↓
+Step 13: Auto-login or Manual Login
 ```
 
-### User Login Flow
+### User Login Flow with Email Verification Check
 
 ```
-User enters credentials
+Step 1: User Enters Credentials
+        ↓
+Step 2: Frontend Validation
+        ↓
+Step 3: POST /api/auth/login
+        ↓
+Step 4: Backend Validates Credentials
+        ↓
+Step 5: Check Email Confirmation Status
         |
-        v
-POST /api/auth/login
+        ├─→ Email NOT Confirmed → Return 403
+        |                          Show "Please confirm email" modal
+        |                          Offer resend option
         |
-        v
-Supabase Auth validates credentials
+        └─→ Email Confirmed → Generate JWT tokens
+                              ↓
+                              Return user data + tokens
+                              ↓
+                              Store in Redux + localStorage
+                              ↓
+                              Redirect to /tasks
+```
+
+### Email Confirmation Resend Flow
+
+```
+Step 1: User Clicks "Resend Email"
+        ↓
+Step 2: POST /api/auth/resend-confirmation
+        ↓
+Step 3: Rate Limit Check
+        - Max 3 requests per hour
         |
-        +-- Valid --> Generate JWT Token
-        |             - Access token
-        |             - Refresh token
-        |             |
-        |             v
-        |             Fetch user profile
-        |             |
-        |             v
-        |             Send to frontend
-        |             |
-        |             v
-        |             Store in Redux + localStorage
+        ├─→ Limit Exceeded → Return 429
         |
-        +-- Invalid --> Return 401 Unauthorized
+        └─→ Within Limit → Continue
+        ↓
+Step 4: Validate User Status
+        |
+        ├─→ Email Not Found → Return 404
+        |
+        ├─→ Already Confirmed → Return 400
+        |
+        └─→ Unconfirmed → Continue
+        ↓
+Step 5: Invalidate Old Token
+        ↓
+Step 6: Generate New Token (24h expiry)
+        ↓
+Step 7: Send New Confirmation Email
+        ↓
+Step 8: Log Email Sent
+        ↓
+Step 9: Return Success (200)
+        ↓
+Step 10: Show Success Toast
+                - Disable resend button (60s cooldown)
 ```
 
 ### Protected API Request Flow
 
 ```
-Frontend sends request
+Step 1: User Action (e.g., create task)
+        ↓
+Step 2: Frontend Adds JWT to Request Header
+        Authorization: Bearer <token>
+        ↓
+Step 3: Request Reaches Backend
+        ↓
+Step 4: CORS Middleware
+        ↓
+Step 5: JWT Authentication Middleware
+        - Extract token
+        - Verify with Supabase
         |
-        v
-Redux middleware adds:
-"Authorization: Bearer <token>"
+        ├─→ Invalid Token → Return 401
+        |                   Frontend tries refresh
+        |                   If fails, logout & redirect
         |
-        v
-Backend JWT middleware
+        └─→ Valid Token → Decode payload
+        ↓
+Step 6: Email Verification Middleware
         |
-        v
-Supabase verifies token
+        ├─→ Email Not Verified → Return 403
+        |                         Show verification modal
         |
-        +-- Valid --> Extract user info
-        |             |
-        |             v
-        |             Attach user to req.user
-        |             |
-        |             v
-        |             Process request
-        |
-        +-- Invalid --> Return 403 Forbidden
+        └─→ Email Verified → Continue
+        ↓
+Step 7: Attach User to Request
+        req.user = { id, email, emailVerified, role }
+        ↓
+Step 8: Route Handler Executes
+        ↓
+Step 9: Database Query with RLS
+        - Automatic user_id filtering
+        ↓
+Step 10: Return Response
+        ↓
+Step 11: Frontend Updates State
 ```
 
 ---
 
-## AI Suggestion Generation Flow
+## User Flows
+
+### AI Suggestion Generation Flow
 
 ```
-Step 1: User requests AI suggestions
-        |
-        v
-Step 2: Frontend dispatches Redux action
-        - Current language (EN/HI)
-        - User context
-        |
-        v
-Step 3: POST /api/ai
-        |
-        v
-Step 4: Backend prepares AI prompt
+Step 1: User Clicks "Get AI Suggestions"
+        ↓
+Step 2: Check Authentication & Email Verification
+        ↓
+Step 3: Redux Dispatches Action
+        ↓
+Step 4: POST /api/ai
+        Body: { language: "en", count: 5, context: {...} }
+        ↓
+Step 5: Backend Authentication & Verification
+        ↓
+Step 6: Prepare AI Prompt
         - Include language preference
-        - Add context about productivity
-        - Request 3-5 task suggestions
-        |
-        v
-Step 5: Send request to Groq API
-        Model: LLaMA (via Groq)
-        Prompt: "Generate {count} productive task 
-                 suggestions in {language} for 
-                 daily productivity"
-        |
-        v
-Step 6: AI processes request
-        - Understands language context
-        - Generates relevant suggestions
-        - Returns structured response
-        |
-        v
-Step 7: Backend stores suggestions
-        - In-memory storage (current implementation)
-        - Associated with user ID
-        - Timestamp added
-        |
-        v
-Step 8: Return suggestions to frontend
-        [
-          {
-            id: "uuid",
-            text: "Complete morning exercise",
-            language: "en",
-            createdAt: "timestamp"
-          },
-          ...
-        ]
-        |
-        v
-Step 9: Redux updates AI state
-        |
-        v
-Step 10: Component displays suggestions
-        - AISuggestionsEnhanced component
-        - One-click add to tasks
-        - Refresh option available
+        - Add user context
+        - Specify requirements
+        ↓
+Step 7: Call Groq API
+        Model: llama-3.1-70b-versatile
+        Temperature: 0.8
+        Max tokens: 1000
+        ↓
+Step 8: AI Processes Request (2-5 seconds)
+        ↓
+Step 9: Parse AI Response (JSON)
+        ↓
+Step 10: Enrich Suggestions
+        - Add UUID
+        - Add user ID
+        - Add timestamps
+        - Add source flag
+        ↓
+Step 11: Store in Memory Cache (30 min expiry)
+        ↓
+Step 12: Return to Frontend (200)
+        ↓
+Step 13: Redux Updates AI State
+        ↓
+Step 14: Component Displays Suggestions
+        - Show suggestion cards
+        - Enable "Add to Tasks" button
+        ↓
+Step 15: User Adds Suggestion → Creates Task
 ```
 
-**Processing Time:** 2-5 seconds for suggestions
+### Task Management Flows
 
----
+#### CREATE Task
 
-## Task Management Flow
-
-### CREATE Task
 ```
-User fills task form
-        |
-        v
-Fields:
-        - Title (required)
-        - Description (optional)
-        - Priority (Low/Medium/High)
-        - Due Date (optional)
-        - Category (optional)
-        |
-        v
-POST /api/tasks
-        |
-        v
-Backend validates data
-        - Check required fields
-        - Sanitize input
+Step 1: Click "Add Task"
+        ↓
+Step 2: TaskForm Modal Opens
+        Fields: Title*, Description, Priority*, Due Date, Category
+        ↓
+Step 3: User Fills Form
+        ↓
+Step 4: Frontend Validation
+        - Title required (max 200 chars)
+        - Priority must be low/medium/high
+        - Due date must be future
+        ↓
+Step 5: Submit Form → Redux Action
+        ↓
+Step 6: POST /api/tasks
+        ↓
+Step 7: Backend Authentication
+        ↓
+Step 8: Backend Validation & Sanitization
+        ↓
+Step 9: Prepare Task Object
+        - Generate UUID
         - Add user ID
         - Set timestamps
-        |
-        v
-Save to Supabase database
-        {
-          userId,
-          title,
-          description,
-          priority,
-          dueDate,
-          category,
-          completed: false,
-          createdAt,
-          updatedAt
-        }
-        |
-        v
-Return new task
-        |
-        v
-Redux updates tasks state
-        |
-        v
-Component re-renders
-        - Task appears in list
-        - Success notification
-```
-
-### READ Tasks
-```
-Component mounts / User logs in
-        |
-        v
-GET /api/tasks
-        |
-        v
-Backend queries Supabase
-        - Filter by userId
-        - Order by createdAt DESC
-        - Include all task fields
-        |
-        v
-Return tasks array
-        |
-        v
-Redux stores tasks
-        |
-        v
-Display in TasksPage
-        - Filter by status
-        - Sort options
-        - Search functionality
-```
-
-### UPDATE Task
-```
-User edits task
-        |
-        v
-Modal/Form opens with current data
-        |
-        v
-Modify fields
-        |
-        v
-PUT /api/tasks/:id
-        |
-        v
-Backend validates and updates
-        - Verify task ownership
-        - Update only changed fields
-        - Update timestamp
-        |
-        v
-Save to Supabase
-        |
-        v
-Return updated task
-        |
-        v
-Redux updates specific task
-        |
-        v
-UI reflects changes
+        ↓
+Step 10: Insert into Supabase
+        ↓
+Step 11: Return Response (201)
+        ↓
+Step 12: Redux Updates State
+        ↓
+Step 13: UI Updates
+        - Modal closes
+        - Task appears at top
+        - Success toast
         - No page reload
-        - Success notification
 ```
 
-### DELETE Task
-```
-User clicks delete
-        |
-        v
-Confirmation dialog
-        |
-        v
-DELETE /api/tasks/:id
-        |
-        v
-Backend verifies ownership
-        |
-        v
-Delete from Supabase
-        |
-        v
-Return success status
-        |
-        v
-Redux removes task from state
-        |
-        v
-UI updates
-        - Task removed from list
-        - Counter updated
-```
-
-### TOGGLE Task Completion
-```
-User clicks checkbox
-        |
-        v
-PUT /api/tasks/:id
-        - Toggle completed status
-        |
-        v
-Backend updates task
-        |
-        v
-Return updated task
-        |
-        v
-Redux updates task
-        |
-        v
-UI shows completion
-        - Visual indication
-        - Move to completed section
-```
-
----
-
-## Dashboard/Tasks Page Flow
+#### READ Tasks
 
 ```
-User navigates to /tasks (or /)
+Step 1: Navigate to /tasks or Component Mounts
+        ↓
+Step 2: useEffect Triggers
+        ↓
+Step 3: GET /api/tasks
+        Query params: ?status=active&sort=createdAt&order=desc
+        ↓
+Step 4: Backend Authentication
+        ↓
+Step 5: Build Database Query
+        - Filter by user_id (RLS automatic)
+        - Apply status filter
+        - Apply sorting
+        ↓
+Step 6: Execute Query
+        ↓
+Step 7: Return Tasks (200)
+        ↓
+Step 8: Redux Stores Tasks
+        ↓
+Step 9: TasksPage Renders
+        - Calculate statistics
+        - Filter & sort display
+        - Render task list
+```
+
+#### UPDATE Task
+
+```
+Step 1: Click "Edit" on Task
+        ↓
+Step 2: TaskForm Opens with Current Data
+        ↓
+Step 3: User Modifies Fields
+        ↓
+Step 4: Submit Changes
+        ↓
+Step 5: PUT /api/tasks/:id
+        ↓
+Step 6: Backend Verification
+        - Authenticate
+        - Check ownership
+        ↓
+Step 7: Update Database
+        - Update fields
+        - Set updated_at timestamp
+        ↓
+Step 8: Return Updated Task (200)
+        ↓
+Step 9: Redux Updates Specific Task
+        ↓
+Step 10: UI Reflects Changes
+        - Modal closes
+        - Task updates in place
+        - Success toast
+```
+
+#### DELETE Task
+
+```
+Step 1: Click "Delete"
+        ↓
+Step 2: Confirmation Dialog Appears
+        ↓
+Step 3: User Confirms
+        ↓
+Step 4: DELETE /api/tasks/:id
+        ↓
+Step 5: Backend Verifies Ownership
+        ↓
+Step 6: Delete from Database
+        ↓
+Step 7: Return Success (200)
+        ↓
+Step 8: Redux Removes Task
+        ↓
+Step 9: UI Updates
+        - Fade animation
+        - Task removed
+        - Counter decrements
+        - Success toast
+```
+
+#### TOGGLE Task Completion
+
+```
+Step 1: Click Checkbox
+        ↓
+Step 2: Optimistic UI Update
+        - Checkbox animates
+        - Strike-through style
+        - Task fades slightly
+        ↓
+Step 3: PUT /api/tasks/:id
+        Body: { completed: true }
+        ↓
+Step 4: Backend Updates
+        ↓
+Step 5: Return Updated Task
+        ↓
+Step 6: Redux Confirms State
+        ↓
+Step 7: UI Shows Completion
+        - Move to "Completed" section
+        - Update statistics
+        - Optional celebration animation
+```
+
+### Dashboard/Tasks Page Flow
+
+```
+Step 1: Navigate to /tasks
+        ↓
+Step 2: ProtectedRoute Checks Auth
         |
-        v
-Check authentication
+        ├─→ Not Authenticated → Redirect to /login
         |
-        +-- Not authenticated --> Redirect to /login
+        ├─→ Not Email Verified → Show verification banner
         |
-        +-- Authenticated --> Load TasksPage
-        |
-        v
-TasksPage component mounts
-        |
-        v
-useEffect() triggers data fetching
-        |
-        +-------+-------+
-        |               |
-        v               v
-      GET tasks      GET ai/suggestions
-        |               |
-        v               v
-   Load all tasks   Load AI suggestions
-        |               |
-        v               v
-   Redux updates   Redux updates
-   tasks state     ai state
-        |
-        v
-Calculate statistics
-        - Total tasks count
-        - Completed tasks count
-        - Pending tasks count
-        - Completion percentage
-        |
-        v
-Render UI components
+        └─→ Authenticated & Verified → Load TasksPage
+        ↓
+Step 3: TasksPage Mounts
+        ↓
+Step 4: Parallel Data Fetching
+        - fetchTasks()
+        - fetchAISuggestions()
+        - fetchUserStats()
+        ↓
+Step 5: Multiple API Calls Execute
+        ↓
+Step 6: Calculate Real-time Statistics
+        - Total tasks
+        - Completed/Pending counts
+        - Completion rate
+        - Priority breakdown
+        - Due date analysis
+        - Category stats
+        ↓
+Step 7: Render Complete UI
         - Header with user info
         - Statistics cards
-        - Add task button
-        - Tasks list/grid
-        - Filter options (All/Active/Completed)
-        - AI suggestions panel
-        - Language switcher
-        - Theme toggle
+        - Actions bar
+        - Tasks list (left column)
+        - AI suggestions (right column)
+        - Filter tabs
+        ↓
+Step 8: User Interactions Available
+        - Add/Edit/Delete tasks
+        - Toggle completion
+        - Search & filter
+        - Sort tasks
+        - Generate AI suggestions
+        - Switch language
+        - Toggle theme
 ```
 
----
-
-## Internationalization (i18n) Flow
+### Internationalization (i18n) Flow
 
 ```
-User selects language
-        |
-        v
-LanguageSwitcher component
-        - EN (English)
-        - HI (Hindi)
-        |
-        v
-i18next changes language
-        |
-        v
-All components re-render
-        |
-        v
-Text updates across app
+Step 1: App Initialization
+        ↓
+Step 2: i18next Configuration
+        - Load translation resources
+        - Set default language (from localStorage or 'en')
+        - Configure fallback
+        ↓
+Step 3: Load Language from Storage
+        ↓
+Step 4: User Clicks Language Switcher
+        Options: English / हिंदी
+        ↓
+Step 5: Change Language Function
+        - i18n.changeLanguage(lng)
+        - localStorage.setItem('language', lng)
+        - Redux: setLanguage(lng)
+        ↓
+Step 6: i18next Updates
+        - All useTranslation() hooks re-render
+        - All t() calls return new translations
+        ↓
+Step 7: Components Re-render with New Language
         - Navigation labels
         - Button text
         - Form labels
         - Error messages
-        - AI suggestions
-        |
-        v
-Language preference saved
-        - localStorage
-        - User can switch anytime
+        - Toast notifications
+        ↓
+Step 8: AI Suggestions Language Update
+        - Fetch new suggestions in selected language
+        ↓
+Step 9: All Text Updates Across App
 ```
-
-**Supported Languages:**
-- English (EN)
-- Hindi (HI)
 
 ---
 
 ## Database Schema
 
 ### Users Table (Supabase Auth)
-```javascript
-{
-  id: UUID (Primary Key),
-  email: String (unique),
-  encrypted_password: String,
-  email_confirmed_at: Timestamp,
-  created_at: Timestamp,
-  updated_at: Timestamp
-}
-```
+- **id:** UUID (Primary Key)
+- **email:** VARCHAR(255) UNIQUE NOT NULL
+- **encrypted_password:** VARCHAR(255) NOT NULL
+- **email_confirmed_at:** TIMESTAMPTZ
+- **confirmation_token:** VARCHAR(255)
+- **confirmation_sent_at:** TIMESTAMPTZ
+- **last_sign_in_at:** TIMESTAMPTZ
+- **created_at:** TIMESTAMPTZ
+- **updated_at:** TIMESTAMPTZ
+- **raw_app_meta_data:** JSONB
+- **raw_user_meta_data:** JSONB
+- **role:** VARCHAR(50) DEFAULT 'authenticated'
+
+**Indexes:**
+- idx_users_email
+- idx_users_confirmation_token
+- idx_users_email_confirmed
 
 ### Profiles Table
-```javascript
-{
-  id: UUID (Primary Key, Foreign Key to Users),
-  full_name: String,
-  avatar_url: String,
-  preferences: JSONB,
-  created_at: Timestamp,
-  updated_at: Timestamp
-}
-```
+- **id:** UUID (FK → auth.users.id)
+- **full_name:** VARCHAR(255)
+- **avatar_url:** TEXT
+- **bio:** TEXT
+- **preferences:** JSONB (theme, language, notifications)
+- **created_at:** TIMESTAMPTZ
+- **updated_at:** TIMESTAMPTZ
+
+**Row Level Security:**
+- Users can view own profile
+- Users can update own profile
 
 ### Tasks Table
-```javascript
-{
-  id: UUID (Primary Key),
-  user_id: UUID (Foreign Key to Users),
-  title: String (required),
-  description: Text,
-  priority: String (enum: ['low', 'medium', 'high']),
-  due_date: Date,
-  category: String,
-  completed: Boolean (default: false),
-  created_at: Timestamp,
-  updated_at: Timestamp
-}
-```
+- **id:** UUID (Primary Key)
+- **user_id:** UUID (FK → auth.users.id)
+- **title:** VARCHAR(200) NOT NULL
+- **description:** TEXT
+- **priority:** VARCHAR(20) CHECK (low/medium/high)
+- **category:** VARCHAR(50)
+- **completed:** BOOLEAN DEFAULT FALSE
+- **due_date:** DATE
+- **source:** VARCHAR(50) (user_created/ai_generated)
+- **created_at:** TIMESTAMPTZ
+- **updated_at:** TIMESTAMPTZ
+- **completed_at:** TIMESTAMPTZ
 
-**Database Indexes:**
-- tasks.user_id (for fast user queries)
-- tasks.created_at (for sorting)
-- tasks.completed (for filtering)
+**Indexes:**
+- idx_tasks_user_id
+- idx_tasks_created_at
+- idx_tasks_completed
+- idx_tasks_due_date
+- idx_tasks_priority
+- idx_tasks_category
+- idx_tasks_user_completed_created (composite)
 
-**Row Level Security (RLS):**
-- Users can only access their own tasks
-- Automatic filtering by user_id
-- Secure by default
+**Row Level Security:**
+- Users can view own tasks
+- Users can create own tasks
+- Users can update own tasks
+- Users can delete own tasks
+
+### Email Logs Table
+- **id:** UUID (Primary Key)
+- **email:** VARCHAR(255) NOT NULL
+- **type:** VARCHAR(50) (confirmation/confirmation_resend/password_reset)
+- **sent_at:** TIMESTAMPTZ
+- **ip_address:** INET
+- **user_agent:** TEXT
+
+**Indexes:**
+- idx_email_logs_email_sent
+
+**Auto-cleanup:** Deletes logs older than 30 days
+
+### Database Triggers
+
+**update_updated_at_column:**
+- Auto-updates updated_at timestamp on tasks and profiles
+
+**set_completed_at:**
+- Auto-sets completed_at when task.completed changes to true
+- Clears completed_at when task.completed changes to false
 
 ---
 
-## API Endpoints Reference
+## API Reference
 
 ### Authentication Endpoints
-- **POST /api/auth/register** - Create new user account
-  - Body: { email, password, name }
-  - Returns: { user, token }
 
-- **POST /api/auth/login** - Authenticate user
-  - Body: { email, password }
-  - Returns: { user, token }
+#### POST /api/auth/register
+**Purpose:** Create new user account
 
-- **GET /api/auth/profile** - Get current user profile
-  - Headers: Authorization: Bearer <token>
-  - Returns: { user, profile }
+**Request Body:**
+- email: string (required)
+- password: string (required, min 8 chars)
+- name: string (optional)
 
-### Task Endpoints
-- **GET /api/tasks** - Retrieve all user tasks
-  - Headers: Authorization: Bearer <token>
-  - Query: ?status=completed&sort=createdAt
-  - Returns: { tasks: [...] }
+**Success Response (201):**
+- success: true
+- message: "Registration successful! Please check your email."
+- user: { id, email, name, emailConfirmed: false }
+- requiresEmailConfirmation: true
 
-- **POST /api/tasks** - Create new task
-  - Headers: Authorization: Bearer <token>
-  - Body: { title, description, priority, dueDate, category }
-  - Returns: { task: {...} }
-
-- **PUT /api/tasks/:id** - Update existing task
-  - Headers: Authorization: Bearer <token>
-  - Body: { title?, description?, priority?, completed?, ... }
-  - Returns: { task: {...} }
-
-- **DELETE /api/tasks/:id** - Delete task
-  - Headers: Authorization: Bearer <token>
-  - Returns: { success: true }
-
-- **GET /api/tasks/debug-all** - Debug endpoint (development)
-  - Headers: Authorization: Bearer <token>
-  - Returns: All tasks with metadata
-
-- **GET /api/tasks/test-all** - Test endpoint (no auth)
-  - Returns: Sample tasks
-
-### AI Endpoints
-- **GET /api/ai** - Retrieve user's AI suggestions
-  - Headers: Authorization: Bearer <token>
-  - Returns: { suggestions: [...] }
-
-- **POST /api/ai** - Generate new AI suggestions
-  - Headers: Authorization: Bearer <token>
-  - Body: { language: 'en' | 'hi', count: 3-5 }
-  - Returns: { suggestions: [...] }
-
-- **DELETE /api/ai/:id** - Delete AI suggestion
-  - Headers: Authorization: Bearer <token>
-  - Returns: { success: true }
+**Error Responses:**
+- 400: Email already exists / Invalid email / Weak password
+- 500: Server error
 
 ---
 
-## Frontend State Management (Redux)
+#### POST /api/auth/login
+**Purpose:** Authenticate user
 
-### Auth Slice
-```javascript
-{
-  user: null | User,
-  token: null | string,
-  isAuthenticated: boolean,
-  loading: boolean,
-  error: null | string
-}
-```
+**Request Body:**
+- email: string (required)
+- password: string (required)
 
-### Tasks Slice
-```javascript
-{
-  tasks: Task[],
-  loading: boolean,
-  error: null | string,
-  filter: 'all' | 'active' | 'completed',
-  sortBy: 'createdAt' | 'priority' | 'dueDate'
-}
-```
+**Success Response (200):**
+- success: true
+- user: { id, email, name, emailVerified: true }
+- token: JWT access token
+- refreshToken: JWT refresh token
 
-### AI Slice
-```javascript
-{
-  suggestions: Suggestion[],
-  loading: boolean,
-  error: null | string,
-  language: 'en' | 'hi'
-}
-```
+**Error Responses:**
+- 401: Invalid credentials
+- 403: Email not confirmed
+- 500: Server error
 
-### UI Slice
-```javascript
-{
-  theme: 'light' | 'dark',
-  language: 'en' | 'hi',
-  sidebarOpen: boolean,
-  notifications: Notification[]
-}
-```
+---
+
+#### GET /api/auth/confirm
+**Purpose:** Confirm email address
+
+**Query Parameters:**
+- token: string (confirmation token)
+
+**Success Response:**
+- 302 Redirect to /email-confirmed?autoLogin=true
+
+**Error Responses:**
+- 400: Invalid/expired token or already confirmed
+- 404: User not found
+
+---
+
+#### POST /api/auth/resend-confirmation
+**Purpose:** Resend confirmation email
+
+**Request Body:**
+- email: string (required)
+
+**Success Response (200):**
+- success: true
+- message: "Confirmation email sent!"
+- emailSentTo: string
+- expiresIn: "24 hours"
+
+**Error Responses:**
+- 400: Email already confirmed
+- 404: Email not found
+- 429: Rate limit exceeded (max 3/hour)
+- 500: Server error
+
+---
+
+#### GET /api/auth/profile
+**Purpose:** Get current user profile
+
+**Headers:**
+- Authorization: Bearer <token>
+
+**Success Response (200):**
+- success: true
+- user: { id, email, name, avatar, preferences }
+
+**Error Responses:**
+- 401: Invalid token
+- 403: Email not verified
+
+---
+
+#### POST /api/auth/refresh
+**Purpose:** Refresh access token
+
+**Request Body:**
+- refreshToken: string
+
+**Success Response (200):**
+- success: true
+- token: new JWT access token
+- refreshToken: new JWT refresh token
+
+**Error Responses:**
+- 401: Invalid/expired refresh token
+
+---
+
+### Task Endpoints
+
+#### GET /api/tasks
+**Purpose:** Retrieve all user tasks
+
+**Headers:**
+- Authorization: Bearer <token>
+
+**Query Parameters:**
+- status: string (optional: all/active/completed)
+- sort: string (optional: createdAt/priority/dueDate)
+- order: string (optional: asc/desc)
+
+**Success Response (200):**
+- success: true
+- tasks: Array of task objects
+- meta: { total, active, completed }
+
+**Error Responses:**
+- 401: Unauthorized
+- 403: Email not verified
+
+---
+
+#### POST /api/tasks
+**Purpose:** Create new task
+
+**Headers:**
+- Authorization: Bearer <token>
+
+**Request Body:**
+- title: string (required, max 200)
+- description: string (optional, max 2000)
+- priority: string (required: low/medium/high)
+- dueDate: date (optional)
+- category: string (optional)
+
+**Success Response (201):**
+- success: true
+- task: Complete task object
+
+**Error Responses:**
+- 400: Missing required fields
+- 401: Unauthorized
+- 403: Email not verified
+
+---
+
+#### PUT /api/tasks/:id
+**Purpose:** Update existing task
+
+**Headers:**
+- Authorization: Bearer <token>
+
+**Request Body:**
+- Any task fields to update
+
+**Success Response (200):**
+- success: true
+- task: Updated task object
+
+**Error Responses:**
+- 400: Invalid data
+- 401: Unauthorized
+- 403: Not task owner or email not verified
+- 404: Task not found
+
+---
+
+#### DELETE /api/tasks/:id
+**Purpose:** Delete task
+
+**Headers:**
+- Authorization: Bearer <token>
+
+**Success Response (200):**
+- success: true
+- message: "Task deleted successfully"
+- deletedId: string
+
+**Error Responses:**
+- 401: Unauthorized
+- 403: Not task owner or email not verified
+- 404: Task not found
+
+---
+
+### AI Endpoints
+
+#### GET /api/ai
+**Purpose:** Retrieve user's AI suggestions
+
+**Headers:**
+- Authorization: Bearer <token>
+
+**Success Response (200):**
+- success: true
+- suggestions: Array of suggestion objects
+- meta: { generatedAt, expiresAt }
+
+**Error Responses:**
+- 401: Unauthorized
+- 403: Email not verified
+
+---
+
+#### POST /api/ai
+**Purpose:** Generate new AI suggestions
+
+**Headers:**
+- Authorization: Bearer <token>
+
+**Request Body:**
+- language: string (required: en/hi)
+- count: number (optional, default: 5)
+
+**Success Response (200):**
+- success: true
+- suggestions: Array of new suggestions
+- meta: { generatedAt, model, language }
+
+**Error Responses:**
+- 400: Invalid language or count
+- 401: Unauthorized
+- 403: Email not verified
+- 429: Rate limit exceeded
+- 500: AI service error
+
+---
+
+#### DELETE /api/ai/:id
+**Purpose:** Delete AI suggestion
+
+**Headers:**
+- Authorization: Bearer <token>
+
+**Success Response (200):**
+- success: true
+- message: "Suggestion deleted"
+
+**Error Responses:**
+- 401: Unauthorized
+- 403: Email not verified
+- 404: Suggestion not found
+
+---
+
+## State Management
+
+### Redux Store Structure
+
+**authSlice:**
+- user: object | null
+- token: string | null
+- refreshToken: string | null
+- isAuthenticated: boolean
+- emailVerified: boolean
+- loading: boolean
+- error: string | null
+
+**tasksSlice:**
+- tasks: array
+- loading: boolean
+- error: string | null
+- filter: 'all' | 'active' | 'completed'
+- sortBy: 'createdAt' | 'priority' | 'dueDate'
+- sortOrder: 'asc' | 'desc'
+- searchQuery: string
+
+**aiSlice:**
+- suggestions: array
+- loading: boolean
+- error: string | null
+- language: 'en' | 'hi'
+- lastGenerated: timestamp | null
+
+**uiSlice:**
+- theme: 'light' | 'dark'
+- language: 'en' | 'hi'
+- sidebarOpen: boolean
+- notifications: array
+- modals: object (taskForm, deleteConfirm, emailVerification)
+
+### Key Selectors
+
+**selectFilteredTasks:**
+- Filters tasks by status and search query
+- Sorts by selected criteria
+- Memoized for performance
+
+**selectTaskStats:**
+- Calculates total, completed, pending
+- Priority breakdown
+- Overdue count
+- Real-time statistics
 
 ---
 
 ## Key Features
 
-1. **AI-Powered Suggestions**
-   - Groq API integration with LLaMA models
-   - Context-aware task recommendations
-   - Multilingual support (English/Hindi)
-   - One-click task creation from suggestions
+### 1. AI-Powered Suggestions
+- **Groq API Integration** with LLaMA 3.1 models
+- Context-aware task recommendations
+- **Multilingual support** (English/Hindi)
+- One-click task creation
+- Smart caching (30-minute expiry)
+- Personalized based on user activity
 
-2. **Smart Task Management**
-   - CRUD operations with real-time updates
-   - Priority levels (Low/Medium/High)
-   - Due date tracking
-   - Category organization
-   - Completion tracking
+### 2. Secure Authentication with Email Verification
+- **Supabase Auth integration**
+- **Email confirmation required** before access
+- JWT token-based security
+- Refresh token mechanism
+- Row Level Security (RLS)
+- Protected routes
+- **Rate-limited resend** (3 per hour)
+- **Token expiry** (24 hours)
 
-3. **Multilingual Interface**
-   - Full i18n support with i18next
-   - Dynamic language switching
-   - Localized AI suggestions
-   - Language-specific error messages
+### 3. Smart Task Management
+- **CRUD operations** with real-time updates
+- Priority levels (Low/Medium/High)
+- Due date tracking with overdue detection
+- Category organization
+- Completion tracking with timestamps
+- **Search and filter** functionality
+- **Multiple sort options**
+- Task statistics and analytics
 
-4. **Secure Authentication**
-   - Supabase Auth integration
-   - JWT token-based security
-   - Row Level Security (RLS)
-   - Protected routes
+### 4. Multilingual Interface
+- Full i18n support with i18next
+- **Dynamic language switching** (EN/HI)
+- Localized AI suggestions
+- Language-specific error messages
+- Persistent language preference
 
-5. **Modern UI/UX**
-   - Tailwind CSS styling
-   - Dark/Light theme toggle
-   - Responsive design
-   - Smooth animations
-   - Toast notifications
+### 5. Modern UI/UX
+- **Tailwind CSS** styling
+- Dark/Light theme toggle
+- Responsive design (mobile-first)
+- Smooth animations
+- Toast notifications
+- Loading states
+- Optimistic UI updates
+- Accessibility features
 
-6. **State Management**
-   - Redux Toolkit for predictable state
-   - Persistent authentication
-   - Optimistic UI updates
-   - Error handling
-
-7. **Real-time Capabilities**
-   - Instant task updates
-   - Live data synchronization
-   - No page reloads required
-
-8. **Developer Experience**
-   - Vite for fast development
-   - Hot module replacement
-   - Environment variable support
-   - Debug endpoints for testing
-
----
-
-## Deployment Architecture
-
-```
-Developer Machine
-        |
-        v
-git commit and push
-        |
-        v
-GitHub Repository
-        |
-        +-------------+
-        |             |
-        v             v
-    FRONTEND      BACKEND
-    (React)       (Node.js)
-        |             |
-        v             v
-npm run build     Deploy to
-(Vite bundler)    Render/Heroku
-        |             |
-        v             v
-Production build  API live at:
-created           api.domain.com
-        |             |
-        v             v
-Deploy to Vercel  Connected to
-        |         Supabase
-        v             |
-Live at:              v
-app.domain.com    Cloud Database
-                  (PostgreSQL)
-                      |
-                      v
-                  Connected to
-                  Groq AI API
-```
-
-**Environment Variables:**
-
-Frontend (.env):
-```
-VITE_API_URL=http://localhost:5000/api
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_anon_key
-```
-
-Backend (.env):
-```
-PORT=5000
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_service_role_key
-GROQ_API_KEY=your_groq_api_key
-JWT_SECRET=your_jwt_secret
-NODE_ENV=development
-```
-
----
-
-## Component Structure
-
-### Frontend Components
-
-**Pages:**
-- `LandingPage` - Home page with app introduction
-- `LoginPage` - User authentication
-- `RegisterPage` - New user registration
-- `TasksPage` - Main task management interface
-
-**Components:**
-- `Header` - Navigation and user menu
-- `TaskItem` - Individual task display
-- `TaskList` - Collection of tasks
-- `TaskForm` - Create/Edit task form
-- `AISuggestionsEnhanced` - AI suggestions panel
-- `LanguageSwitcher` - Language selection
-- `ThemeToggle` - Dark/Light mode switch
-- `ProtectedRoute` - Route guard for authentication
+### 6. Real-time Capabilities
+- Instant task updates (no page reload)
+- Live data synchronization
+- Optimistic updates
+- Real-time statistics
 
 ---
 
 ## Performance Optimizations
 
-1. **Frontend:**
-   - Code splitting with React.lazy
-   - Memoization with React.memo
-   - Redux selector optimization
-   - Vite's optimized bundling
+### Frontend Optimizations
 
-2. **Backend:**
-   - In-memory AI suggestion caching
-   - Database query optimization
-   - Connection pooling with Supabase
-   - Efficient middleware stack
+**Code Splitting:**
+- Lazy load routes and components
+- Reduce initial bundle size
+- Faster first contentful paint
 
-3. **Database:**
-   - Indexed queries for fast retrieval
-   - Row Level Security for automatic filtering
-   - Optimized table structure
+**Component Memoization:**
+- React.memo for pure components
+- Prevent unnecessary re-renders
+- Optimize render performance
+
+**Redux Selectors:**
+- Memoized selectors with reselect
+- Cache expensive computations
+- Reduce selector recalculations
+
+**Image Optimization:**
+- Lazy loading
+- WebP format with fallback
+- Responsive images
+
+**Debounced Search:**
+- 300ms debounce on search input
+- Reduce API calls
+- Improve performance
+
+### Backend Optimizations
+
+**In-Memory Caching:**
+- Cache AI suggestions (30 min)
+- Reduce Groq API calls
+- Faster response times
+
+**Database Query Optimization:**
+- Use indexes effectively
+- Select only needed fields
+- Implement pagination
+- Limit result sets
+
+**Connection Pooling:**
+- Supabase handles automatically
+- Configurable pool size
+
+**Response Compression:**
+- Gzip compression middleware
+- Reduce payload size
+
+**Rate Limiting:**
+- 100 requests per 15 minutes per IP
+- Prevent abuse
+- Protect resources
+
+### Database Optimizations
+
+**Proper Indexing:**
+- Indexes on frequently queried columns
+- Composite indexes for complex queries
+- Analyze query patterns
+
+**Row Level Security:**
+- Automatic filtering at database level
+- No need for WHERE user_id clauses
+- Enhanced security
+
+**Efficient Queries:**
+- Use joins instead of multiple queries
+- Fetch related data in single query
+- Optimize N+1 problems
+
+---
+
+## Deployment
+
+### Deployment Architecture
+
+```
+GitHub Repository (main branch)
+        ↓
+    Webhooks trigger CI/CD
+        ↓
+    ┌────────┴────────┐
+    ↓                 ↓
+Frontend Pipeline   Backend Pipeline
+    ↓                 ↓
+Build (Vite)      Tests (Jest)
+    ↓                 ↓
+Deploy Vercel     Deploy Render
+    ↓                 ↓
+app.yourdomain.com  api.yourdomain.com
+        ↓                 ↓
+        └────────┬────────┘
+                 ↓
+        Supabase Cloud (Database)
+                 ↓
+        Groq AI API (AI Services)
+```
+
+### Environment Variables
+
+**Frontend (.env.production):**
+- VITE_API_URL
+- VITE_SUPABASE_URL
+- VITE_SUPABASE_ANON_KEY
+- VITE_APP_NAME
+- VITE_APP_VERSION
+
+**Backend (.env.production):**
+- PORT
+- NODE_ENV
+- SUPABASE_URL
+- SUPABASE_KEY
+- GROQ_API_KEY
+- JWT_SECRET
+- JWT_EXPIRY
+- REFRESH_TOKEN_EXPIRY
+- EMAIL_CONFIRMATION_REQUIRED
+- CONFIRMATION_TOKEN_EXPIRY
+- RESEND_RATE_LIMIT
+- FRONTEND_URL
+- SENTRY_DSN
+- LOG_LEVEL
+- RATE_LIMIT_WINDOW
+- RATE_LIMIT_MAX_REQUESTS
+
+---
+
+## Project Structure
+
+### Frontend
+```
+client/
+├── public/
+├── src/
+│   ├── components/
+│   │   ├── auth/
+│   │   ├── tasks/
+│   │   ├── ai/
+│   │   ├── layout/
+│   │   └── common/
+│   ├── pages/
+│   ├── store/
+│   │   └── slices/
+│   ├── services/
+│   ├── utils/
+│   ├── i18n/
+│   │   └── locales/
+│   └── styles/
+├── .env
+└── package.json
+```
+
+### Backend
+```
+server/
+├── src/
+│   ├── config/
+│   ├── middleware/
+│   ├── routes/
+│   ├── controllers/
+│   ├── services/
+│   ├── utils/
+│   └── validators/
+├── .env
+└── package.json
+```
 
 ---
 
 ## Error Handling
 
+### Error Flow
+
 ```
-Request Error Occurs
-        |
-        v
-Backend catches error
-        |
-        v
-Error middleware processes
-        |
-        v
-Categorize error:
-        - 400: Bad Request
-        - 401: Unauthorized
-        - 403: Forbidden
-        - 404: Not Found
-        - 500: Server Error
-        |
-        v
-Return structured error response
+Error Occurs
+        ↓
+Try-Catch Block
+        ↓
+Error Middleware
+        ↓
+Categorize Error:
+        - Validation Error (400)
+        - Authentication Error (401)
+        - Authorization Error (403)
+        - Not Found Error (404)
+        - Rate Limit Error (429)
+        - Server Error (500)
+        ↓
+Format Error Response:
         {
           success: false,
-          error: "Error message",
-          code: "ERROR_CODE"
+          error: "User-friendly message",
+          code: "ERROR_CODE",
+          details: {} // Only in development
         }
-        |
-        v
-Frontend receives error
-        |
-        v
-Redux updates error state
-        |
-        v
-Display user-friendly message
-        - Toast notification
-        - Inline error display
+        ↓
+Log Error:
+        - Console (development)
+        - File system (production)
+        - Error tracking service (Sentry)
+        ↓
+Send Response to Client
+        ↓
+Frontend Error Interceptor
+        ↓
+Handle Error:
+        - Update Redux error state
+        - Show toast notification
+        - Display inline error
+        - Retry mechanism
         - Fallback UI
 ```
+
+### Common Error Codes
+
+**Authentication Errors:**
+- `INVALID_CREDENTIALS`: Wrong email or password
+- `TOKEN_INVALID`: JWT token is invalid or expired
+- `TOKEN_EXPIRED`: Access token has expired
+- `EMAIL_NOT_CONFIRMED`: User hasn't verified email
+- `EMAIL_NOT_VERIFIED`: Email verification required for action
+
+**Validation Errors:**
+- `MISSING_REQUIRED_FIELDS`: Required fields not provided
+- `INVALID_EMAIL`: Email format is invalid
+- `WEAK_PASSWORD`: Password doesn't meet requirements
+- `INVALID_PRIORITY`: Priority must be low/medium/high
+- `INVALID_DATE`: Date format or value is invalid
+
+**Authorization Errors:**
+- `NOT_TASK_OWNER`: User doesn't own the task
+- `INSUFFICIENT_PERMISSIONS`: User lacks required permissions
+
+**Resource Errors:**
+- `USER_NOT_FOUND`: User doesn't exist
+- `TASK_NOT_FOUND`: Task doesn't exist
+- `EMAIL_NOT_FOUND`: Email address not registered
+- `SUGGESTION_NOT_FOUND`: AI suggestion doesn't exist
+
+**Rate Limiting:**
+- `RATE_LIMIT_EXCEEDED`: Too many requests
+- `EMAIL_RATE_LIMIT`: Too many email requests
+
+**Server Errors:**
+- `DATABASE_ERROR`: Database query failed
+- `AI_SERVICE_ERROR`: Groq API error
+- `EMAIL_SERVICE_ERROR`: Email sending failed
+- `INTERNAL_SERVER_ERROR`: Unexpected server error
+
+---
+
+## Translation Structure
+
+### English (en.json)
+
+**auth:**
+- login: "Login"
+- register: "Register"
+- email: "Email Address"
+- password: "Password"
+- confirmPassword: "Confirm Password"
+- name: "Full Name"
+- emailNotConfirmed: "Please confirm your email"
+- resendEmail: "Resend Email"
+- checkInbox: "Check your inbox"
+- emailSent: "Confirmation email sent!"
+
+**tasks:**
+- addTask: "Add Task"
+- editTask: "Edit Task"
+- deleteTask: "Delete Task"
+- title: "Title"
+- description: "Description"
+- priority: "Priority"
+- low: "Low"
+- medium: "Medium"
+- high: "High"
+- dueDate: "Due Date"
+- category: "Category"
+- completed: "Completed"
+- active: "Active"
+- all: "All Tasks"
+
+**ai:**
+- suggestions: "AI Suggestions"
+- generate: "Generate Suggestions"
+- addToTasks: "Add to Tasks"
+- refresh: "Refresh Suggestions"
+- noSuggestions: "No suggestions available"
+- generating: "Generating suggestions..."
+
+**common:**
+- save: "Save"
+- cancel: "Cancel"
+- delete: "Delete"
+- edit: "Edit"
+- close: "Close"
+- loading: "Loading..."
+- error: "Error"
+- success: "Success"
+- confirm: "Confirm"
+
+### Hindi (hi.json)
+
+**auth:**
+- login: "लॉगिन"
+- register: "पंजीकरण"
+- email: "ईमेल पता"
+- password: "पासवर्ड"
+- confirmPassword: "पासवर्ड की पुष्टि करें"
+- name: "पूरा नाम"
+- emailNotConfirmed: "कृपया अपना ईमेल सत्यापित करें"
+- resendEmail: "ईमेल फिर से भेजें"
+- checkInbox: "अपना इनबॉक्स जांचें"
+- emailSent: "पुष्टिकरण ईमेल भेजा गया!"
+
+**tasks:**
+- addTask: "नया कार्य जोड़ें"
+- editTask: "कार्य संपादित करें"
+- deleteTask: "कार्य हटाएं"
+- title: "शीर्षक"
+- description: "विवरण"
+- priority: "प्राथमिकता"
+- low: "कम"
+- medium: "मध्यम"
+- high: "उच्च"
+- dueDate: "नियत तारीख"
+- category: "श्रेणी"
+- completed: "पूर्ण"
+- active: "सक्रिय"
+- all: "सभी कार्य"
+
+**ai:**
+- suggestions: "AI सुझाव"
+- generate: "सुझाव उत्पन्न करें"
+- addToTasks: "कार्यों में जोड़ें"
+- refresh: "सुझाव रीफ्रेश करें"
+- noSuggestions: "कोई सुझाव उपलब्ध नहीं"
+- generating: "सुझाव तैयार हो रहे हैं..."
+
+**common:**
+- save: "सहेजें"
+- cancel: "रद्द करें"
+- delete: "हटाएं"
+- edit: "संपादित करें"
+- close: "बंद करें"
+- loading: "लोड हो रहा है..."
+- error: "त्रुटि"
+- success: "सफलता"
+- confirm: "पुष्टि करें"
+
+---
+
+## Security Best Practices
+
+### Authentication Security
+
+1. **Password Security:**
+   - Minimum 8 characters required
+   - Bcrypt hashing with 10 rounds
+   - Never store plain text passwords
+   - Password strength validation
+
+2. **Token Security:**
+   - JWT with short expiry (1 hour)
+   - Refresh tokens with longer expiry (7 days)
+   - Secure token storage (httpOnly cookies recommended)
+   - Token rotation on refresh
+
+3. **Email Verification:**
+   - Required before accessing protected resources
+   - Secure token generation (32 bytes)
+   - Token expiry (24 hours)
+   - Rate limiting on resend (3 per hour)
+
+4. **Session Management:**
+   - Automatic logout on token expiry
+   - Refresh token mechanism
+   - Revoke tokens on logout
+   - Monitor suspicious activity
+
+### API Security
+
+1. **CORS Configuration:**
+   - Whitelist specific origins
+   - Restrict allowed methods
+   - Configure credentials handling
+
+2. **Rate Limiting:**
+   - 100 requests per 15 minutes per IP
+   - Stricter limits on sensitive endpoints
+   - Email sending limits
+
+3. **Input Validation:**
+   - Validate all user inputs
+   - Sanitize data to prevent XSS
+   - Type checking and format validation
+   - Use validation libraries
+
+4. **SQL Injection Prevention:**
+   - Use parameterized queries
+   - Supabase handles this automatically
+   - Never concatenate user input into queries
+
+### Database Security
+
+1. **Row Level Security (RLS):**
+   - Enabled on all tables
+   - Policies enforce user isolation
+   - Automatic filtering by user_id
+   - No manual WHERE clauses needed
+
+2. **Least Privilege:**
+   - Backend uses service role key (full access)
+   - Frontend uses anon key (limited access)
+   - RLS policies enforce restrictions
+
+3. **Data Encryption:**
+   - Passwords encrypted with bcrypt
+   - Sensitive data encrypted at rest
+   - HTTPS for data in transit
+
+---
+
+## Testing Strategy
+
+### Frontend Testing
+
+**Unit Tests:**
+- Redux reducers and actions
+- Utility functions
+- Helper functions
+- Validation logic
+
+**Component Tests:**
+- Individual component rendering
+- Props handling
+- Event handlers
+- Conditional rendering
+
+**Integration Tests:**
+- Redux store integration
+- API service calls
+- Form submissions
+- Navigation flows
+
+**E2E Tests:**
+- Complete user flows
+- Registration to task creation
+- Login to task management
+- AI suggestions workflow
+
+### Backend Testing
+
+**Unit Tests:**
+- Controller functions
+- Service functions
+- Utility functions
+- Validation logic
+
+**Integration Tests:**
+- API endpoint responses
+- Database operations
+- Authentication flow
+- Email sending
+
+**API Tests:**
+- Request/response validation
+- Status code verification
+- Error handling
+- Rate limiting
+
+**Load Tests:**
+- Concurrent user handling
+- Database query performance
+- AI API response times
+- Cache effectiveness
+
+---
+
+## Monitoring and Logging
+
+### Application Monitoring
+
+**Frontend Metrics:**
+- Page load times
+- Component render times
+- API request latency
+- Error rates
+- User interactions
+
+**Backend Metrics:**
+- Request/response times
+- Database query duration
+- AI API call duration
+- Error rates
+- Memory usage
+- CPU usage
+
+**Database Metrics:**
+- Query performance
+- Connection pool usage
+- Table sizes
+- Index effectiveness
+
+### Logging Strategy
+
+**Development:**
+- Console logging
+- Detailed error messages
+- Request/response logging
+- Database query logging
+
+**Production:**
+- File-based logging
+- Error tracking (Sentry)
+- Log rotation
+- Minimal sensitive data
+- Structured JSON logs
+
+**Log Levels:**
+- ERROR: Critical failures
+- WARN: Potential issues
+- INFO: General information
+- DEBUG: Detailed debugging (dev only)
 
 ---
 
 ## Future Enhancements
 
-- **Advanced AI Features**
-  - Task prioritization suggestions
-  - Smart scheduling recommendations
-  - Productivity analytics
-  - Natural language task input
+### Planned Features
 
-- **Collaboration**
-  - Shared task lists
-  - Team workspaces
-  - Real-time collaboration
-  - Task assignment
+1. **Collaboration:**
+   - Share tasks with other users
+   - Team workspaces
+   - Task assignments
+   - Comments and discussions
 
-- **Integrations**
-  - Calendar sync (Google, Outlook)
-  - Email notifications
-  - Mobile app (React Native)
-  - Browser extension
+2. **Advanced AI:**
+   - Natural language task creation
+   - Smart scheduling suggestions
+   - Priority recommendations
+   - Workload analysis
 
-- **Enhanced Features**
-  - Recurring tasks
-  - Sub-tasks and checklists
-  - File attachments
-  - Task templates
-  - Time tracking
-  - Kanban board view
-  - Gantt chart view
+3. **Notifications:**
+   - Due date reminders
+   - Push notifications
+   - Email digests
+   - Slack/Discord integrations
 
-- **Analytics**
-  - Productivity insights
-  - Task completion trends
-  - Time spent analysis
-  - Category-wise breakdown
+4. **Analytics:**
+   - Productivity insights
+   - Task completion trends
+   - Time tracking
+   - Custom reports
 
-- **Notifications**
-  - Push notifications
-  - Email reminders
-  - SMS alerts
-  - Due date warning
-**Made with ❤️ for productivity enthusiasts**
+5. **Mobile Apps:**
+   - React Native apps
+   - Offline support
+   - Push notifications
+   - Biometric authentication
+
+6. **Integrations:**
+   - Google Calendar sync
+   - GitHub integration
+   - Trello import/export
+   - Zapier webhooks
+
+7. **Gamification:**
+   - Achievement system
+   - Streaks and badges
+   - Leaderboards
+   - Rewards program
+
+8. **Advanced Organization:**
+   - Projects and sub-tasks
+   - Tags and labels
+   - Custom views
+   - Kanban boards
+
+---
+
+## Troubleshooting Guide
+
+### Common Issues
+
+**Email Confirmation Not Received:**
+1. Check spam/junk folder
+2. Verify email address is correct
+3. Click "Resend Email"
+4. Wait for rate limit cooldown
+5. Contact support if persistent
+
+**Cannot Login:**
+1. Verify credentials are correct
+2. Check if email is confirmed
+3. Try password reset
+4. Clear browser cache
+5. Check network connection
+
+**Tasks Not Loading:**
+1. Refresh the page
+2. Check network connection
+3. Verify authentication status
+4. Check browser console for errors
+5. Try different browser
+
+**AI Suggestions Not Generating:**
+1. Ensure email is verified
+2. Check rate limits
+3. Try different language
+4. Wait and retry
+5. Check Groq API status
+
+**Performance Issues:**
+1. Clear browser cache
+2. Disable browser extensions
+3. Check internet speed
+4. Update browser
+5. Try incognito mode
+
+## Version History
+
+**v1.0.0 (Current)**
+- Initial release
+- Core task management
+- AI suggestions
+- Email verification
+- Multilingual support (EN/HI)
+
+**Upcoming:**
+- v1.1.0: Collaboration features
+- v1.2.0: Advanced analytics
+- v2.0.0: Mobile apps
+
+---
+
+## Glossary
+
+**Terms:**
+- **JWT:** JSON Web Token for authentication
+- **RLS:** Row Level Security in database
+- **CRUD:** Create, Read, Update, Delete operations
+- **i18n:** Internationalization
+- **API:** Application Programming Interface
+- **UUID:** Universally Unique Identifier
+- **SMTP:** Simple Mail Transfer Protocol
+- **CORS:** Cross-Origin Resource Sharing
+- **XSS:** Cross-Site Scripting attack
+- **Bcrypt:** Password hashing algorithm
+
+---
+
+*Last Updated: October 4, 2025*
+*Documentation Version: 1.0.0*

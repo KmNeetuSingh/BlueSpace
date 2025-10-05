@@ -135,9 +135,9 @@ export default function TasksPage() {
           <h1 style={{ margin: 0, fontSize: '28px', fontWeight: 'bold' }}>
             {categories.find(c => c.id === activeCategory)?.label || 'Tasks'}
           </h1>
-          <div className="subtitle" style={{ marginTop: '4px' }}>
+          {/* <div className="subtitle" style={{ marginTop: '4px' }}>
             {filteredTasks.length} tasks
-          </div>
+          </div> */}
         </div>
 
         {/* Task Form */}

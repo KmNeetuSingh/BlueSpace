@@ -7,7 +7,7 @@ export default function LandingPage() {
     <div className="card" style={{ padding: '20px', overflow: 'hidden', margin: '40px auto' }}>
       <div className="hero">
         <div className="hero-content">
-          <div className="badge">AI-Powered To-Do App</div>
+          <div className="badge">{t('hero_badge')}</div>
           <h1 className="hero-title">{t('hero_title')}</h1>
           <p className="hero-subtitle">{t('hero_subtitle')}</p>
           <div className="cta-row">
@@ -16,16 +16,16 @@ export default function LandingPage() {
           </div>
           <div className="landing-features" style={{ marginTop: '24px', display: 'flex', gap: '16px' }}>
             <div className="feature-box" style={{ flex: 1, padding: '12px', borderRadius: '8px', background: 'var(--panel)', color: 'var(--text)' }}>
-              <h3 style={{ margin: '0 0 8px 0' }}>Smart Task Sorting</h3>
-              <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>AI organizes your tasks smartly based on priority and category.</p>
+              <h3 style={{ margin: '0 0 8px 0' }}>{t('feature_smart_task_sorting')}</h3>
+              <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>{t('feature_smart_task_sorting_desc')}</p>
             </div>
             <div className="feature-box" style={{ flex: 1, padding: '12px', borderRadius: '8px', background: 'var(--panel)', color: 'var(--text)' }}>
-              <h3 style={{ margin: '0 0 8px 0' }}>Daily Insights</h3>
-              <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>Track your daily progress and productivity effortlessly.</p>
+              <h3 style={{ margin: '0 0 8px 0' }}>{t('feature_daily_insights')}</h3>
+              <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>{t('feature_daily_insights_desc')}</p>
             </div>
             <div className="feature-box" style={{ flex: 1, padding: '12px', borderRadius: '8px', background: 'var(--panel)', color: 'var(--text)' }}>
-              <h3 style={{ margin: '0 0 8px 0' }}>Private & Secure</h3>
-              <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>Your data stays with you — safe and confidential.</p>
+              <h3 style={{ margin: '0 0 8px 0' }}>{t('feature_private_secure')}</h3>
+              <p style={{ margin: 0, fontSize: '14px', color: 'var(--muted)' }}>{t('feature_private_secure_desc')}</p>
             </div>
           </div>
         </div>

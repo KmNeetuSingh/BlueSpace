@@ -1,6 +1,9 @@
-# AI-Powered Todo App - Complete Documentation
+# AI-Powered Todo App
 
 A full-stack productivity application that leverages AI to help users manage their tasks efficiently with intelligent suggestions, multilingual support, secure email verification, and seamless task management.
+
+## Live Demo
+https://github.com/user-attachments/assets/b06a6c82-d1ec-4789-8476-c4c472f8a454
 
 ---
 

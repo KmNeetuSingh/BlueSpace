@@ -1,4 +1,4 @@
-# AI-Powered Todo App
+# AI-Powered FullStack Todo App
 
 A full-stack productivity application that leverages AI to help users manage their tasks efficiently with intelligent suggestions, multilingual support, secure email verification, and seamless task management.
 

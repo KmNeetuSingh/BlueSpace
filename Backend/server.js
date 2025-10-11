@@ -1,18 +1,32 @@
-const dotenv = require("dotenv");
 const express = require("express");
 const cors = require("cors");
+const dotenv = require("dotenv");
 
-dotenv.config(); // Load environment variables
+dotenv.config();
 
+// Import routes
 const supabase = require("./config/supabase");
 const taskRoutes = require("./routes/taskRoutes");
 const aiRoutes = require("./routes/aiRoute");
 const authRoutes = require("./routes/authRoutes");
 
 const app = express();
-const PORT = process.env.PORT || 3000; 
+const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// CORS configuration
+app.use(cors({
+  origin: [
+    "https://blue-space-two.vercel.app", 
+    "http://localhost:5173",             
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  credentials: true,
+}));
+
+// Handle preflight requests
+app.options("*", cors());
+
+// Middleware
 app.use(express.json());
 
 // Routes
@@ -44,5 +58,5 @@ app.use((req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(` Server is running on port ${PORT}`);
 });

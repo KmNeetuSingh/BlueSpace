@@ -1,12 +1,9 @@
-const { GoogleGenAI } = require("@google/genai");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 const { v4: uuidv4 } = require("uuid");
-
-// ✅ Initialize Gemini client
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY, // store this in .env
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({
+  model: "gemini-2.0-flash",
 });
-
-// Temporary in-memory storage
 let aiSuggestions = [];
 
 // @route   GET /api/ai
@@ -54,7 +51,6 @@ exports.createAISuggestion = async (req, res) => {
       });
     }
 
-    // Add language instruction if needed
     let enhancedPrompt = prompt.trim();
     if (userLanguage === "hi") {
       enhancedPrompt +=
@@ -62,15 +58,17 @@ exports.createAISuggestion = async (req, res) => {
     }
 
     // ✅ Call Gemini API
-    const result = await ai.models.generateContent({
-      model: "gemini-2.0-flash", // Fast and capable model
-      contents: enhancedPrompt,
-    });
-
-    // Extract text safely
-    const suggestion =
-      result.response?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "No response from AI";
+    let suggestion;
+    try {
+      const result = await model.generateContent(enhancedPrompt);
+      suggestion = result.response.text();
+    } catch (apiError) {
+      console.error("Gemini API Error:", apiError);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to generate response from AI service",
+      });
+    }
 
     const aiSuggestion = {
       id: uuidv4(),
